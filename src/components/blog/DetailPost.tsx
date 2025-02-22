@@ -2,18 +2,10 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Clock, User, Calendar, Share2 } from "lucide-react";
-
-interface Post {
-  id: number;
-  title: string;
-  summary: string;
-  imageUrl: string;
-  content?: string;
-  author?: string;
-  date?: string;
-  readTime?: string;
-}
+import { X, Clock, User, Calendar, Share2, ArrowUpRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useMediaQuery } from 'react-responsive';
+import { Post } from "@/data/data";
 
 interface PostDetailModalProps {
   post: Post | null;
@@ -23,177 +15,210 @@ interface PostDetailModalProps {
 
 const overlayVariants = {
   closed: { opacity: 0 },
-  open: { 
-    opacity: 1,
-    transition: {
-      ease: "easeOut",
-      duration: 0.3
-    }
-  }
+  open: { opacity: 1, transition: { ease: "easeOut", duration: 0.3 } },
 };
 
 const modalVariants = {
   closed: { 
-    opacity: 0,
-    y: 50,
-    scale: 0.95
+    opacity: 0, 
+    y: 100, 
+    scale: 0.95,
+    transition: { duration: 0.2 }
   },
   open: { 
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      type: "spring",
-      damping: 30,
-      stiffness: 300
-    }
-  }
+    opacity: 1, 
+    y: 0, 
+    scale: 1, 
+    transition: { 
+      type: "spring", 
+      damping: 25, 
+      stiffness: 300,
+      duration: 0.4
+    } 
+  },
 };
 
 const PostDetailModal: React.FC<PostDetailModalProps> = ({ post, isOpen, onClose }) => {
-  // Prevenir scroll cuando el modal está abierto
+  const router = useRouter();
+  
+  // Media queries específicos para diferentes dispositivos
+  const isIPhone14 = useMediaQuery({ query: '(min-width: 390px) and (max-width: 393px) and (min-height: 844px) and (max-height: 852px)' });
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+  const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
+
   React.useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [isOpen]);
 
   if (!post) return null;
 
+  // Ajustes específicos para iPhone 14
+  const modalHeight = isIPhone14 ? "h-[75vh]" : "max-h-[85vh]";
+  const imageHeight = isIPhone14 ? "h-[30vh]" : "h-[200px] xs:h-[250px] sm:h-[300px] md:h-[350px]";
+  const contentPadding = isIPhone14 ? "p-4" : "p-4 sm:p-6 md:p-8";
+
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 sm:p-0"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3"
           initial="closed"
           animate="open"
           exit="closed"
         >
-          {/* Overlay con blur */}
-          <motion.div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-            variants={overlayVariants}
+          {/* Overlay optimizado */}
+          <motion.div 
+            className="fixed inset-0 bg-black/40 backdrop-blur-[2px]" 
+            variants={overlayVariants} 
             onClick={onClose}
           />
 
-          {/* Modal */}
-          <motion.div
-            className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden z-10"
+          {/* Modal con ajustes específicos para iPhone 14 */}
+          <motion.div 
+            className={`relative w-[92%] ${modalHeight} bg-white rounded-xl shadow-xl overflow-hidden z-10 ${isMobile ? 'max-w-[400px]' : 'sm:w-[85%] md:w-[80%] lg:w-[75%] max-w-[130vh]'}`}
             variants={modalVariants}
+            style={{
+              boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
+            }}
           >
-            {/* Botón de cerrar */}
-            <motion.button
-              className="absolute top-4 right-4 z-20 p-2 rounded-full bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors"
-              onClick={onClose}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <X className="w-6 h-6" />
-            </motion.button>
+            <div className="h-full overflow-y-auto">
+              {/* Botón de cerrar optimizado */}
+              <motion.button
+                className="absolute top-2 right-2 z-20 p-2 rounded-full bg-black/20 backdrop-blur-md text-white hover:bg-black/30 transition-colors"
+                onClick={onClose}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <X className="w-4 h-4" />
+              </motion.button>
 
-            {/* Imagen principal */}
-            <div className="relative h-[400px] overflow-hidden">
-              <motion.div 
-                className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-10"
-              />
-              <motion.img
-                src={post.imageUrl}
-                alt={post.title}
-                className="w-full h-full object-cover"
-                layoutId={`image-${post.id}`}
-              />
-              
-              {/* Metadata sobre la imagen */}
-              <div className="absolute bottom-0 left-0 right-0 p-8 z-20 text-white">
-                <motion.h1 
-                  className="text-4xl font-bold mb-4"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  {post.title}
-                </motion.h1>
-                
+              {/* Imagen principal ajustada */}
+              <div className={`relative ${imageHeight} overflow-hidden`}>
                 <motion.div 
-                  className="flex items-center gap-6 text-sm"
+                  className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
+                  transition={{ duration: 0.6 }}
+                />
+                <motion.img 
+                  src={post.imageUrl} 
+                  alt={post.title} 
+                  className="w-full h-full object-cover"
+                  initial={{ scale: 1.1 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.6 }}
+                />
+
+                {/* Metadata ajustada */}
+                <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-20 text-white">
+                  <motion.h1 
+                    className={`${isIPhone14 ? 'text-lg' : 'text-xl'} sm:text-2xl md:text-3xl font-bold mb-2`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    {post.title}
+                  </motion.h1>
+
+                  <motion.div 
+                    className="flex flex-wrap items-center gap-2 text-xs"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <div className="flex items-center gap-1">
+                      <User className="w-3 h-3" />
+                      <span>{post.author || "Autor Anónimo"}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      <span>{new Date(post.date).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      <span>{post.readTime || "3 min lectura"}</span>
+                    </div>
+                  </motion.div>
+                </div>
+              </div>
+
+              {/* Contenido ajustado */}
+              <div className={contentPadding}>
+                <motion.p 
+                  className="text-sm text-gray-600 mb-4 leading-relaxed"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
                 >
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    <span>{post.author || 'Autor Anónimo'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    <span>{post.date || '20 Feb 2024'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4" />
-                    <span>{post.readTime || '5 min lectura'}</span>
+                  {post.summary}
+                </motion.p>
+
+                <motion.div 
+                  className="prose prose-sm max-w-none"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  {post.content || "Contenido no disponible."}
+                </motion.div>
+
+                {/* Footer optimizado */}
+                <motion.div
+                  className="mt-4 pt-3 border-t border-gray-200"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
+                >
+                  <div className="flex flex-col gap-3">
+                    {/* Tags ajustados */}
+                    <motion.div 
+                      className="flex flex-wrap gap-2"
+                      initial={{ scale: 0.95 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.8 }}
+                    >
+                      <span className="px-2 py-0.5 bg-purple-100 text-purple-600 rounded-full text-xs">#tecnología</span>
+                      <span className="px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full text-xs">#desarrollo</span>
+                    </motion.div>
+
+                    {/* Botones ajustados */}
+                    <div className="flex items-center justify-between">
+                      <motion.button 
+                        className="flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors text-xs"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Share2 className="w-3.5 h-3.5" />
+                        <span>Compartir</span>
+                      </motion.button>
+
+                      <motion.button
+                        className="flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors text-xs"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          if (post.slug) {
+                            router.push(`/blog/${post.slug}`);
+                          }
+                        }}
+                      >
+                        <span>Más</span>
+                        <ArrowUpRight className="w-3.5 h-3.5" />
+                      </motion.button>
+                    </div>
                   </div>
                 </motion.div>
               </div>
-            </div>
-
-            {/* Contenido */}
-            <div className="p-8">
-              {/* Resumen */}
-              <motion.p 
-                className="text-lg text-gray-600 mb-6 leading-relaxed"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-              >
-                {post.summary}
-              </motion.p>
-
-              {/* Contenido principal */}
-              <motion.div 
-                className="prose prose-lg max-w-none"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-              >
-                {post.content || `
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-
-                  Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                `}
-              </motion.div>
-
-              {/* Footer con acciones */}
-              <motion.div 
-                className="mt-8 pt-6 border-t border-gray-200 flex items-center justify-between"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-              >
-                {/* Tags */}
-                <div className="flex gap-2">
-                  <span className="px-3 py-1 bg-purple-100 text-purple-600 rounded-full text-sm">
-                    #tecnología
-                  </span>
-                  <span className="px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-sm">
-                    #desarrollo
-                  </span>
-                </div>
-
-                {/* Compartir */}
-                <motion.button
-                  className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Share2 className="w-5 h-5" />
-                  <span>Compartir</span>
-                </motion.button>
-              </motion.div>
             </div>
           </motion.div>
         </motion.div>
