@@ -1,36 +1,119 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🏰 Arquitectura JAMstack con Next.js 15 y Strapi
 
-## Getting Started
+## 📌 Introducción
 
-First, run the development server:
+Este documento describe la arquitectura utilizada en el desarrollo de un sitio web de marketing y blog basado en JAMstack, utilizando Next.js 15 para el frontend y Strapi como CMS headless para el backend.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🔥 ¿Por qué JAMstack?
+
+JAMstack (JavaScript, APIs y Markup) es una arquitectura moderna que separa el frontend del backend, ofreciendo:
+
+✅ Alto rendimiento: Pre-renderización e ISR en Next.js para cargas rápidas.
+✅ SEO optimizado: HTML pre-renderizado con metadatos dinámicos.
+✅ Escalabilidad: Strapi maneja el contenido de forma flexible.
+✅ Mayor seguridad: Sin exposición directa de la base de datos.
+✅ Menos costos: Hosting más económico con caching y CDNs.
+
+## 📂 Estructura del Proyecto
+
+```
+/src
+  /components
+    /layout          # Componentes de estructura (Navbar, Footer, Layout)
+    /ui              # Componentes reutilizables básicos (Botón, Input, Card)
+    /blog            # Componentes específicos del blog (PostCard, PostList)
+  
+  /lib
+    /strapi         # Configuración y funciones para conectar con Strapi
+      client.ts
+      queries.ts
+    /utils          # Utilidades generales (SEO, formateo de datos)
+  
+  /types           # Definiciones de TypeScript
+    post.ts
+    category.ts
+
+  /pages
+    /blog
+      [slug].tsx    # Página individual de post
+      index.tsx     # Lista de posts
+    /api           # API routes para contenido dinámico
+    _app.tsx
+    index.tsx
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🎯 Implementación
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 🔗 Conectando Next.js con Strapi
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+#### 📌 Cliente API en `/lib/strapi/client.ts`
 
-## Learn More
+```typescript
+const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+const API_TOKEN = process.env.STRAPI_API_TOKEN;
 
-To learn more about Next.js, take a look at the following resources:
+export async function fetchAPI(path: string) {
+  const requestUrl = `${API_URL}/api/${path}`;
+  const response = await fetch(requestUrl, {
+    headers: {
+      'Authorization': `Bearer ${API_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  const data = await response.json();
+  return data;
+}
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+#### 📌 Variables de entorno en `.env.local`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+NEXT_PUBLIC_STRAPI_API_URL=http://localhost:1337
+STRAPI_API_TOKEN=tu_token_aqui
+```
 
-## Deploy on Vercel
+#### 📄 Páginas Dinámicas con ISR en `/pages/blog/[slug].tsx`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```typescript
+export async function getStaticProps({ params }) {
+  const post = await fetchAPI(`posts/${params.slug}`);
+  return {
+    props: { post },
+    revalidate: 60 // Revalidación cada 60s
+  };
+}
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🎨 Atomic Design en los Componentes
+
+Se aplica Atomic Design para organizar los componentes de forma modular:
+
+- **Átomos:** Botón, Input, Card.
+- **Moléculas:** PostCard, Formulario de comentarios.
+- **Organismos:** Navbar, PostList.
+- **Plantillas:** Layout del blog.
+- **Páginas:** `/blog/[slug].tsx`, `/index.tsx`.
+
+### 📂 Ejemplo de estructura de componentes:
+
+```
+/components
+  /ui
+    Button.tsx
+    Input.tsx
+  /blog
+    PostCard.tsx
+    PostList.tsx
+  /layout
+    Navbar.tsx
+    Footer.tsx
+    Layout.tsx
+```
+
+## 🚀 Optimización y Mejores Prácticas
+
+✅ **Revalidación ISR:** Mantiene el contenido actualizado sin reconstrucciones completas.
+✅ **Uso de React Query o SWR:** Para optimizar el fetching de datos.
+✅ **Middleware de seguridad:** Protección de rutas con autenticación.
+✅ **Optimización de imágenes:** Uso de `next/image` y Strapi para almacenar imágenes.
+✅ **CDN para distribución global:** Mejora tiempos de respuesta en distintas regiones.
