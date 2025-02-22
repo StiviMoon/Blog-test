@@ -8,11 +8,11 @@ Este documento describe la arquitectura utilizada en el desarrollo de un sitio w
 
 JAMstack (JavaScript, APIs y Markup) es una arquitectura moderna que separa el frontend del backend, ofreciendo:
 
--✅ Alto rendimiento: Pre-renderización e ISR en Next.js para cargas rápidas.
--✅ SEO optimizado: HTML pre-renderizado con metadatos dinámicos.
--✅ Escalabilidad: Strapi maneja el contenido de forma flexible.
--✅ Mayor seguridad: Sin exposición directa de la base de datos.
--✅ Menos costos: Hosting más económico con caching y CDNs.
+* ✅ Alto rendimiento: Pre-renderización e ISR en Next.js para cargas rápidas.
+* ✅ SEO optimizado: HTML pre-renderizado con metadatos dinámicos.
+* ✅ Escalabilidad: Strapi maneja el contenido de forma flexible.
+* ✅ Mayor seguridad: Sin exposición directa de la base de datos.
+* ✅ Menos costos: Hosting más económico con caching y CDNs.
 
 ## 📂 Estructura del Proyecto
 
